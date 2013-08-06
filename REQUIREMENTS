@@ -1,0 +1,18 @@
+* Allow read and write locks
+
+* Fairly queue up blocking locks
+
+* allow locking and unlocking
+
+* upgrade a read lock to write, and downgrage write lock to read
+
+* Clean up held locks when the process exits
+
+* Get a list of held locks and their details:
+    resource_id
+    machine
+    pid
+    lock type
+    time locked
+
+* failover
