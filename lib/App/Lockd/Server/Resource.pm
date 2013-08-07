@@ -2,6 +2,8 @@ package App::Lockd::Server::Resource;
 
 # A named thing you can lock
 
+use List::MoreUtils qw(any first_index);
+
 use App::Lockd::Util::HasProperties qw(key state holders waiters -nonew);
 use App::Lockd::LockType qw(UNLOCKED LOCK_SHARED LOCK_EXCLUSIVE);
 
@@ -121,24 +123,16 @@ sub is_waiting {
 sub _is_in_list {
     my($self, $listname, $lock) = @_;
 
-Carp::confess('lock is false') unless ($lock);
     my $list = $self->$listname;
-    foreach my $other ( @$list ) {
-        return $lock if ($lock->is_same_as($other));
-    }
-    return 0;
+    return any { $lock->is_same_as($_) } @$list;
 }
 
 sub _remove_from_list {
     my($self, $listname, $lock) = @_;
 
     my $list = $self->$listname;
-    for (my $i = 0; $i < @$list; $i++) {
-        if ($lock->is_same_as($list->[$i])) {
-            return splice(@$list, $i, 1);
-        }
-    }
-    return;
+    my $idx = first_index { $lock->is_same_as($_) } @$list;
+    return $idx == -1 ? () : splice(@$list, $i, 1);
 }
 
         
