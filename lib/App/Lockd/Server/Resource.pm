@@ -1,0 +1,133 @@
+package App::Lockd::Server::Resource;
+
+# A named thing you can lock
+
+use App::Lockd::Util::HasProperties qw(key state holders waiters);
+use App::Lockd::LockType qw(UNLOCKED LOCK_SHARED LOCK_EXCLUSIVE);
+
+# Constructor - shouldn't be called from outsiders.  Use get() instead
+# this "new" is to prevent HasProperties from giving us the basic constructor
+sub new {
+    my $class = shift;
+    Carp::croak(qq(Can't locate object method "new" via package "$class"));
+}
+
+sub _new {
+    my $class = shift;
+    return App::Lockd::Util::HasProperties::new($class, @_);
+}
+
+{
+    my %resources;
+    sub get {
+        my($class, $key) = @_;
+        unless (exists $resources{$key}) {
+            $resources{$key} = $class->_new(key => $key, state => UNLOCKED, holders => [], waiters => []);
+        }
+        return $resources{$key};
+    }
+}
+
+
+sub lock {
+    my($self, $lock) = @_;
+
+    return if ($self->is_lock_attached($lock)); # Can't double-lock the same lock
+    
+    if ($self->state->is_compatible_with($lock->type)) {
+        $self->_lock_aquired($lock);
+
+    } else {
+        $self->_add_to_list('waiters', $lock);
+    }
+}
+
+sub unlock {
+    my($self, $lock) = @_;
+
+    Carp::croak("$lock is not holding the lock") unless ($self->_is_in_list('holders'));
+
+    my $holders = $self->holders;
+    for (my $i = 0; $i < @$holders; $i++) {
+        if ($lock->is_same_as($holders->[$i])) {
+            splice(@$holders, $i, 1);
+            last;
+        }
+    }
+
+    $self->_drain_waiters if (! @$holders);
+    return 1;
+}
+
+# unlock() calls this when it's time for the next batch of locks to
+# become active.  For example, after an exclusive lock is released,
+# and the next lock is a shared lock, then all the shared locks can
+# get signalled
+#
+# an alternative would be to shift off waiters as long as they're
+# compatible with the first waiter
+sub _drain_waiters {
+    my $self = shift;
+
+    my $waiters = $self->waiters;
+    my $next = shift @$waiters;
+    return unless $next;
+
+    my @next = ( $next );
+    for (my $i = 0; $i < @$waiters; $i++) {
+        if ($next->type->is_compatible_with($waiters->[$i]->type)) {
+            push @next, splice(@$waiters, $i, 1);
+            redo;
+        }
+    }
+
+    $self->_lock_aquired($_) foreach @next;
+}
+    
+
+sub _add_to_list {
+    my($self, $listname, $lock) = @_;
+
+    my $list = $self->$listname;
+    push @$list, $lock;
+}
+
+sub _lock_aquired {
+    my($self, $lock) = @_;
+
+    $self->state( $lock->type );
+    $self->_add_to_list('holders', $lock);
+    $lock->signal(1);
+}
+
+
+# Return true if the lock is in the holders or waiters list
+sub is_lock_attached {
+    my($self, $lock) = @_;
+
+    return $self->_is_in_list('holders', $lock) || $self->_is_in_list('waiters', $lock);
+}
+
+sub is_holding {
+    my($self, $lock) = @_;
+    return $self->_is_in_list('holders', $lock);
+}
+
+sub is_waiting {
+    my($self, $lock) = @_;
+    return $self->_is_in_list('waiters', $lock);
+}
+
+sub _is_in_list {
+    my($self, $listname, $lock) = @_;
+
+    my $list = $self->$listname;
+    foreach my $other ( @$list ) {
+        return $lock if ($lock->is_same_as($other));
+    }
+    return 0;
+}
+
+
+        
+1;
