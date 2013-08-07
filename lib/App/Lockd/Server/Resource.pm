@@ -41,7 +41,7 @@ sub release {
     if ($self->_is_in_list('holders', $lock)) {
         $self->_unlock($lock);
 
-    } elsif ($self->_is_in_list('waiters'), $lock) {
+    } elsif ($self->_is_in_list('waiters', $lock)) {
         $self->_remove_from_list('waiters', $lock);
 
     } else {
