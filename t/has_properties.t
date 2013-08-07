@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12;
+use Test::More tests => 16;
 
 package TestClass;
 
@@ -31,3 +31,26 @@ ok(! $t3, 'Call constructor with unknown property returns false');
 like($@,
     qr(Can't locate object method "crash_prop" via package "TestClass"),
     'Exception complains about missing method "crash_prop"');
+
+
+
+package TestClassNoNew;
+
+use App::Lockd::Util::HasProperties qw(-nonew prop_a);
+
+sub constructor {
+    my $class = shift;
+    return bless {}, $class;
+}
+
+package main;
+
+my $t4 = eval { TestClassNoNew->new() };
+ok(! $t4, 'Calling constructor on a -nonew class did not work');
+like($@,
+    qr(Can't locate object method "new" via package "TestClassNoNew"),
+    'Exception matches expected');
+
+$t4 = TestClassNoNew->constructor();
+is($t4->prop_a(123), 123, 'Mutator still works');
+is($t4->prop_a, 123, 'Accessor works');

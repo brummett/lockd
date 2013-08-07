@@ -3,14 +3,10 @@ package App::Lockd::Server::Lock;
 use strict;
 use warnings;
 
-use App::Lockd::Util::HasProperties qw(resource cb);
+use App::Lockd::Util::HasProperties qw(resource cb -nonew);
 use App::Lockd::LockType qw(LOCK_SHARED LOCK_EXCLUSIVE);
 
 use Carp;
-
-{ no warnings 'redefine';
-sub new { Carp::croak("shared() or exclusive() are the constructors for ".__PACKAGE__); }
-}
 
 sub _new {
     my($class, $type, $resource) = @_;

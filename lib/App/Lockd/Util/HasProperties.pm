@@ -8,7 +8,14 @@ use Sub::Install;
 sub import {
     my $caller = caller;
 
+    my $should_make_constructor = 1;
+
     foreach my $prop ( @_ ) {
+        if ($prop eq '-nonew') {
+            $should_make_constructor = 0;
+            next;
+        }
+
         my $sub = sub {
             my $self = shift;
             if (@_) {
@@ -25,7 +32,7 @@ sub import {
     }
 
     my $caller_new = "${caller}::new";
-    unless (defined &$caller_new) {
+    if ($should_make_constructor and !defined(&$caller_new)) {
         Sub::Install::install_sub({
             code => \&new,
             into => $caller,

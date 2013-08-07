@@ -2,15 +2,8 @@ package App::Lockd::Server::Resource;
 
 # A named thing you can lock
 
-use App::Lockd::Util::HasProperties qw(key state holders waiters);
+use App::Lockd::Util::HasProperties qw(key state holders waiters -nonew);
 use App::Lockd::LockType qw(UNLOCKED LOCK_SHARED LOCK_EXCLUSIVE);
-
-# Constructor - shouldn't be called from outsiders.  Use get() instead
-# this "new" is to prevent HasProperties from giving us the basic constructor
-sub new {
-    my $class = shift;
-    Carp::croak(qq(Can't locate object method "new" via package "$class"));
-}
 
 sub _new {
     my $class = shift;
