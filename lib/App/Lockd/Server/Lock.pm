@@ -56,6 +56,11 @@ sub is_same_as {
     return $self eq $other;
 }
 
+sub is_compatible_with {
+    my($self, $other) = @_;
+    return $self->type->is_compatible_with($other->type);
+}
+
 
 
 1;

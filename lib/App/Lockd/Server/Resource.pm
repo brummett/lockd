@@ -77,7 +77,7 @@ sub _drain_waiters {
 
     my @next = ( $next );
     for (my $i = 0; $i < @$waiters; $i++) {
-        if ($next->type->is_compatible_with($waiters->[$i]->type)) {
+        if ($next->is_compatible_with($waiters->[$i])) {
             push @next, splice(@$waiters, $i, 1);
             redo;
         }
