@@ -47,7 +47,7 @@ sub release {
         $self->_remove_from_list('waiters', $lock);
 
     } else {
-        Carp::croak("$lock is not holding the lock") unless ($self->_is_in_list('holders'));
+        Carp::croak("$lock is not holding or waiting on resource ". $self->key);
     }
 }
 
