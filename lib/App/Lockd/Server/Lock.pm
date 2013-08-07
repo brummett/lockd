@@ -10,6 +10,7 @@ use Carp;
 
 sub _new {
     my($class, $type, $resource) = @_;
+    Carp::croak('Creating a lock requires a resource') unless ($resource);
     return bless { type => $type, resource => $resource }, $class;
 }
 
