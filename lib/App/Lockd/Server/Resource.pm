@@ -35,19 +35,26 @@ sub lock {
     }
 }
 
-sub unlock {
+sub release {
     my($self, $lock) = @_;
 
-    Carp::croak("$lock is not holding the lock") unless ($self->_is_in_list('holders'));
+    if ($self->_is_in_list('holders', $lock)) {
+        $self->_unlock($lock);
+
+    } elsif ($self->_is_in_list('waiters'), $lock) {
+        $self->_remove_from_list('waiters', $lock);
+
+    } else {
+        Carp::croak("$lock is not holding the lock") unless ($self->_is_in_list('holders'));
+    }
+}
+
+sub _unlock {
+    my($self, $lock) = @_;
+
+    $self->_remove_from_list('holders', $lock);
 
     my $holders = $self->holders;
-    for (my $i = 0; $i < @$holders; $i++) {
-        if ($lock->is_same_as($holders->[$i])) {
-            splice(@$holders, $i, 1);
-            last;
-        }
-    }
-
     $self->_drain_waiters if (! @$holders);
     return 1;
 }
@@ -114,6 +121,7 @@ sub is_waiting {
 sub _is_in_list {
     my($self, $listname, $lock) = @_;
 
+Carp::confess('lock is false') unless ($lock);
     my $list = $self->$listname;
     foreach my $other ( @$list ) {
         return $lock if ($lock->is_same_as($other));
@@ -121,6 +129,17 @@ sub _is_in_list {
     return 0;
 }
 
+sub _remove_from_list {
+    my($self, $listname, $lock) = @_;
+
+    my $list = $self->$listname;
+    for (my $i = 0; $i < @$list; $i++) {
+        if ($lock->is_same_as($list->[$i])) {
+            return splice(@$list, $i, 1);
+        }
+    }
+    return;
+}
 
         
 1;
