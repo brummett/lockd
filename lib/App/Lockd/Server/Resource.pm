@@ -82,10 +82,13 @@ sub _drain_waiters {
     return unless $next;
 
     my @next = ( $next );
-    for (my $i = 0; $i < @$waiters; $i++) {
+
+    my $i = 0;
+    while ($i < @$waiters) {
         if ($next->is_compatible_with($waiters->[$i])) {
             push @next, splice(@$waiters, $i, 1);
-            redo;
+        } else {
+            $i++;
         }
     }
 
