@@ -110,6 +110,12 @@ sub is_lock_attached {
     return $self->_is_in_list('holders', $lock) || $self->_is_in_list('waiters', $lock);
 }
 
+sub is_locked {
+    my $self = shift;
+
+    return scalar(@{$self->holders});
+}
+
 sub is_holding {
     my($self, $lock) = @_;
     return $self->_is_in_list('holders', $lock);
