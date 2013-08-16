@@ -1,5 +1,8 @@
 package App::Lockd::Server::Resource;
 
+use strict;
+use warnings;
+
 # A named thing you can lock
 
 use List::MoreUtils qw(any first_index);
@@ -141,7 +144,7 @@ sub _remove_from_list {
 
     my $list = $self->$listname;
     my $idx = first_index { $lock->is_same_as($_) } @$list;
-    return $idx == -1 ? () : splice(@$list, $i, 1);
+    return $idx == -1 ? () : splice(@$list, $idx, 1);
 }
 
         
