@@ -57,7 +57,10 @@ sub _unlock {
     $self->_remove_from_list('holders', $lock);
 
     my $holders = $self->holders;
-    $self->_drain_waiters if (! @$holders);
+    if (! @$holders) {
+        $self->state(UNLOCKED);
+        $self->_drain_waiters;
+    }
     return 1;
 }
 
