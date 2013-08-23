@@ -41,6 +41,23 @@ sub is_compatible_with {
     return $self->type->is_compatible_with($other->type);
 }
 
+sub on_success {
+    my($self, $code) = @_;
+    if (my $orig = $self->{on_success}) {
+        $self->{on_success} = sub {
+            $orig->();
+            $code->();
+        };
+    } else {
+        $self->{on_success} = $code;
+    }
+}
 
+sub signal {
+    my $self = shift;
+    my $code = delete $self->{on_success};
+    $code->() if $code;
+    return 1;
+}
 
 1;

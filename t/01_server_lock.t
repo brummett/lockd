@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 44;
 
 use App::Lockd::Server::Claim;
 use App::Lockd::LockType qw(LOCK_SHARED LOCK_EXCLUSIVE);
@@ -9,6 +9,8 @@ use App::Lockd::LockType qw(LOCK_SHARED LOCK_EXCLUSIVE);
 create();
 same();
 compatible();
+one_callback();
+multiple_callbacks();
 
 
 sub create {
@@ -38,3 +40,43 @@ sub compatible {
     ok(! $excl->is_compatible_with($shared), 'Exclusive lock is not compatible with shared lock');
 }
 
+
+sub one_callback {
+    foreach my $type ( qw(shared exclusive) ) {
+        my $c = App::Lockd::Server::Claim->$type;
+        ok($c, "made $type claim");
+
+        my $first = 0;
+        ok($c->on_success( sub { $first++ } ), 'Add success callback');
+        ok($c->signal, 'signal');
+        is($first, 1, 'callback was called');
+
+        $first = 0;
+        ok($c->signal, 'signal again');
+        is($first, 0, 'callback was not called again');
+
+        $first = 0;
+        ok($c->on_success( sub { $first++ } ), 'Add a new success callback');
+        ok($c->signal, 'signal'),
+        is($first, 1, 'New callback was called');
+    }
+}
+
+sub multiple_callbacks {
+    foreach my $type ( qw(shared exclusive) ) {
+        my $c = App::Lockd::Server::Claim->$type;
+        ok($c, "made $type claim");
+
+        my @called;
+        ok($c->on_success( sub { push @called, 1 } ),' Add succes callback');
+        ok($c->on_success( sub { push @called, 2 } ),' Add second succes callback');
+        ok($c->on_success( sub { push @called, 3 } ),' Add third succes callback');
+
+        ok($c->signal, 'signal');
+        is_deeply(\@called, [1,2,3], 'Callbacks were run in the correct order');
+
+        @called = ();
+        ok($c->signal, 'signal again');
+        is_deeply(\@called, [], 'Callbacks were not re-run');
+    }
+}
