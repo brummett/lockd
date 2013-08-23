@@ -11,9 +11,14 @@ use constant LOCK_EXCLUSIVE => 'App::Lockd::LockType::Exclusive';
 use base 'Exporter';
 our @EXPORT_OK = qw(UNLOCKED LOCK_SHARED LOCK_EXCLUSIVE);
 
-sub is_compatible_with {
-    my $class = shift;
-    Carp::croak("Class $class did not implement is_compatible_with");
+foreach my $required_method (qw( is_compatible_with upgraded_type downgraded_type ) ) {
+    my $sub = sub {
+        my $class = shift;
+        Carp::croak("Class $class did not implement $required_method");
+    };
+    my $name = join('::', __PACKAGE__, $required_method);
+    no strict 'refs';
+    *$name = $sub;
 }
 
 1;
@@ -24,6 +29,9 @@ our @ISA = qw(App::Lockd::LockType);
 
 sub is_compatible_with { 1; }
 
+sub upgraded_type { '' }
+sub downgraded_type { '' }
+
 package App::Lockd::LockType::Shared;
 
 our @ISA = qw(App::Lockd::LockType);
@@ -33,6 +41,9 @@ sub is_compatible_with {
     return $other->isa(App::Lockd::LockType::LOCK_EXCLUSIVE) ? 0 : 1;
 }
 
+#sub upgraded_type { LOCK_EXCLUSIVE }
+#sub downgraded_type { '' }
+
 package App::Lockd::LockType::Exclusive;
 
 our @ISA = qw(App::Lockd::LockType);
@@ -41,5 +52,8 @@ sub is_compatible_with {
     my($self, $other) = @_;
     return $other->isa(App::Lockd::LockType::UNLOCKED) ? 1 : 0;
 }
+
+#sub upgraded_type { '' }
+#sub downgraded_type { LOCK_SHARED }
 
 1;

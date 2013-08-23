@@ -27,96 +27,36 @@ sub _new {
 }
 
 
-sub lock {
-    my($self, $lock) = @_;
-
-    return if ($self->is_lock_attached($lock)); # Can't double-lock the same lock
-    
-    if ($self->state->is_compatible_with($lock->type)) {
-        $self->_lock_aquired($lock);
-
-    } else {
-        $self->_add_to_list('waiters', $lock);
-    }
-}
-
-sub release {
-    my($self, $lock) = @_;
-
-    if ($self->_is_in_list('holders', $lock)) {
-        $self->_unlock($lock);
-
-    } elsif ($self->_is_in_list('waiters', $lock)) {
-        $self->_remove_from_list('waiters', $lock);
-
-    } else {
-        return;
-    }
-}
-
-sub _unlock {
-    my($self, $lock) = @_;
-
-    $self->_remove_from_list('holders', $lock);
-
-    my $holders = $self->holders;
-    if (! @$holders) {
-        $self->state(UNLOCKED);
-        $self->_drain_waiters;
-    }
-    return 1;
-}
-
-# unlock() calls this when it's time for the next batch of locks to
-# become active.  For example, after an exclusive lock is released,
-# and the next lock is a shared lock, then all the shared locks can
-# get signalled
-#
-# an alternative would be to shift off waiters as long as they're
-# compatible with the first waiter
-sub _drain_waiters {
+sub add_to_holders {
     my $self = shift;
-
-    my $waiters = $self->waiters;
-    my $next = shift @$waiters;
-    return unless $next;
-
-    my @next = ( $next );
-
-    my $i = 0;
-    while ($i < @$waiters) {
-        if ($next->is_compatible_with($waiters->[$i])) {
-            push @next, splice(@$waiters, $i, 1);
-        } else {
-            $i++;
-        }
-    }
-
-    $self->_lock_aquired($_) foreach @next;
+    $self->_add_to_list('holders', @_);
 }
-    
+
+sub add_to_waiters {
+    my $self = shift;
+    $self->_add_to_list('waiters', @_);
+}
 
 sub _add_to_list {
-    my($self, $listname, $lock) = @_;
+    my $self = shift;
+    my $listname = shift;
 
     my $list = $self->$listname;
-    push @$list, $lock;
+    my @added;
+    foreach my $claim ( @_ ) {
+        next if $self->_is_in_list($listname, $claim);
+        push @$list, $claim;
+        push @added, $claim;
+    }
+    return @added;
 }
 
-sub _lock_aquired {
-    my($self, $lock) = @_;
 
-    $self->state( $lock->type );
-    $self->_add_to_list('holders', $lock);
-    $lock->signal(1);
-}
+# Return true if the claim is in the holders or waiters list
+sub is_claim_attached {
+    my($self, $claim) = @_;
 
-
-# Return true if the lock is in the holders or waiters list
-sub is_lock_attached {
-    my($self, $lock) = @_;
-
-    return $self->_is_in_list('holders', $lock) || $self->_is_in_list('waiters', $lock);
+    return $self->_is_in_list('holders', $claim) || $self->_is_in_list('waiters', $claim);
 }
 
 sub is_locked {
@@ -126,27 +66,42 @@ sub is_locked {
 }
 
 sub is_holding {
-    my($self, $lock) = @_;
-    return $self->_is_in_list('holders', $lock);
+    my($self, $claim) = @_;
+    return $self->_is_in_list('holders', $claim);
 }
 
 sub is_waiting {
-    my($self, $lock) = @_;
-    return $self->_is_in_list('waiters', $lock);
+    my($self, $claim) = @_;
+    return $self->_is_in_list('waiters', $claim);
+}
+
+sub waiting_length {
+    my $self = shift;
+    return scalar(@{ $self->waiters });
 }
 
 sub _is_in_list {
-    my($self, $listname, $lock) = @_;
+    my($self, $listname, $claim) = @_;
 
     my $list = $self->$listname;
-    return any { $lock->is_same_as($_) } @$list;
+    return any { $claim->is_same_as($_) } @$list;
+}
+
+sub remove_from_holders {
+    my $self = shift;
+    $self->_remove_from_list('holders', @_);
+}
+
+sub remove_from_waiters {
+    my $self = shift;
+    $self->_remove_from_list('waiters', @_);
 }
 
 sub _remove_from_list {
-    my($self, $listname, $lock) = @_;
+    my($self, $listname, $claim) = @_;
 
     my $list = $self->$listname;
-    my $idx = first_index { $lock->is_same_as($_) } @$list;
+    my $idx = first_index { $claim->is_same_as($_) } @$list;
     return $idx == -1 ? () : splice(@$list, $idx, 1);
 }
 
