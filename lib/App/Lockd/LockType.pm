@@ -41,8 +41,8 @@ sub is_compatible_with {
     return $other->isa(App::Lockd::LockType::LOCK_EXCLUSIVE) ? 0 : 1;
 }
 
-#sub upgraded_type { LOCK_EXCLUSIVE }
-#sub downgraded_type { '' }
+sub upgraded_type { App::Lockd::LockType::LOCK_EXCLUSIVE }
+sub downgraded_type { '' }
 
 package App::Lockd::LockType::Exclusive;
 
@@ -53,7 +53,7 @@ sub is_compatible_with {
     return $other->isa(App::Lockd::LockType::UNLOCKED) ? 1 : 0;
 }
 
-#sub upgraded_type { '' }
-#sub downgraded_type { LOCK_SHARED }
+sub upgraded_type { '' }
+sub downgraded_type { App::Lockd::LockType::LOCK_SHARED }
 
 1;

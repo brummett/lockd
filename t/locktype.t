@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 15;
 
 use App::Lockd::LockType qw(UNLOCKED LOCK_SHARED LOCK_EXCLUSIVE);
 
@@ -24,6 +24,11 @@ foreach my $other (LOCK_SHARED, LOCK_EXCLUSIVE) {
 }
     
 
+ok(! UNLOCKED->upgraded_type, 'unlocked has no upgraded type');
+ok(! UNLOCKED->downgraded_type, 'unlocked has no downgraded type');
 
+ok(! LOCK_EXCLUSIVE->upgraded_type, 'exclusive has no upgraded type');
+is(LOCK_EXCLUSIVE->downgraded_type, LOCK_SHARED, 'exclusive downgraded type is shared');
 
-
+ok(! LOCK_SHARED->downgraded_type, 'shared has no downgraded type');
+is(LOCK_SHARED->upgraded_type, LOCK_EXCLUSIVE, 'shared upgraded type is exclusive');
