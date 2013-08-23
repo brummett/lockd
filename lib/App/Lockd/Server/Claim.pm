@@ -3,7 +3,7 @@ package App::Lockd::Server::Claim;
 use strict;
 use warnings;
 
-use App::Lockd::Util::HasProperties qw(resource promise -nonew);
+use App::Lockd::Util::HasProperties qw(resource on_success -nonew);
 use App::Lockd::LockType qw(LOCK_SHARED LOCK_EXCLUSIVE);
 
 use Carp;

@@ -5,8 +5,6 @@ use warnings;
 
 use App::Lockd::Util qw(required_params);
 
-use Promises;
-
 sub execute {
     my $class = shift;
 
@@ -24,10 +22,7 @@ sub execute {
 
     } else {
         $resource->add_to_waiters($claim);
-        my $dfr = Promises::deferred;
-        
-        $claim->promise($dfr);
-        $dfr->promise->then($success);
+        $claim->on_success($success);
     }
 
     return 1;

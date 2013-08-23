@@ -38,7 +38,7 @@ sub execute {
         $resource->state( $next_claim->type );
         $resource->add_to_holders(@next);
 
-        do { $_->promise->resolve($resource) } foreach @next;
+        do { $_->on_success->($resource) } foreach @next;
     }
 
     return 1;
