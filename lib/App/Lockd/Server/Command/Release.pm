@@ -25,15 +25,8 @@ sub execute {
         return 1 unless $next_claim;  # no more waiters either
         
         # Find all the waiters compatible with the next claim
-        my @next = ( $next_claim );
-        my $i = 0;
-        while ($i < @$waiters) {
-            if ($next_claim->is_compatible_with($waiters->[$i])) {
-                push @next, splice(@$waiters, $i, 1);
-            } else {
-                $i++;
-            }
-        }
+        my @next = ($next_claim);
+        push @next, $class->drain_waiters(claim => $next_claim);
 
         $resource->state( $next_claim->type );
         $resource->add_to_holders(@next);
@@ -43,5 +36,31 @@ sub execute {
 
     return 1;
 }
+
+# Search through the waiters list on the resource and remove all claims that
+# are compatible with the given claim to the holders list
+#
+# Returns the list of compatible claims
+sub drain_waiters {
+    my $class = shift;
+
+    my($next_claim) = required_params([qw(claim)], @_);
+
+    my $resource = $next_claim->resource;
+
+    my @compatible;
+    my $waiters = $resource->waiters;
+    my $i = 0;
+    while ($i < @$waiters) {
+        if ($next_claim->is_compatible_with($waiters->[$i])) {
+            push @compatible, splice(@$waiters, $i, 1);
+        } else {
+            $i++;
+        }
+    }
+
+    return @compatible;
+}
+
 
 1;
