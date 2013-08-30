@@ -3,6 +3,8 @@ package App::Lockd::Server::Daemon::Cli;
 use strict;
 use warnings;
 
+use base 'App::Lockd::Server::LineOrientedClient';
+
 use Carp;
 
 # Implements the command line interface
@@ -18,13 +20,7 @@ sub new {
 
     my $self = bless \%params, $class;
 
-    my $watcher = AnyEvent::Handle->new(
-                        fh          => $self->fh,
-                        keepalive   => 1,
-                        on_eof      => sub { $self->on_eof(@_) },
-                        on_error    => sub { $self->on_error(@_) },
-                    );
-    $self->watcher($watcher);
+    $self->_create_watcher;
 
     $self->announce;
     $self->queue_read;
@@ -65,20 +61,6 @@ sub on_error {
     $fh->close();
 }
     
-
-sub queue_read {
-    my $self = shift;
-    $self->watcher->push_read(line => sub { $self->readline(@_) });
-}
-    
-
-
-
-sub writemsg {
-    my($self, $msg) = @_;
-
-    $self->watcher->push_write($msg . "\r\n");
-}
 
 sub announce {
     my $self = shift;
