@@ -9,7 +9,7 @@ use AnyEvent;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
 
-use App::Lockd::Util::HasProperties qw(stopper_cv connections);
+use App::Lockd::Util::HasProperties qw(stopper_cv connections client_watcher cli_watcher);
 
 use App::Lockd::Server::Daemon::Cli;
 
@@ -21,9 +21,19 @@ sub execute {
 
     $self->connections({});
 
-    AnyEvent::Socket::tcp_server( 0, CLIENT_LISTEN_PORT, sub { $self->new_client_connection(@_) });
+    my $client_watcher = AnyEvent::Socket::tcp_server(
+                                undef,
+                                CLIENT_LISTEN_PORT,
+                                sub { $self->new_client_connection(@_) }
+                            );
+    $self->client_watcher($client_watcher);
 
-    AnyEvent::Socket::tcp_server( 0, CLI_LISTEN_PORT, sub { $self->new_cli_connection(@_) });
+    my $cli_watcher = AnyEvent::Socket::tcp_server(
+                                undef,
+                                CLI_LISTEN_PORT,
+                                sub { $self->new_cli_connection(@_) }
+                            );
+    $self->cli_watcher($cli_watcher);
 
     print STDERR "Listening on port ",CLIENT_LISTEN_PORT," for connections\n";
 
