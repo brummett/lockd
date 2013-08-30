@@ -3,15 +3,20 @@ package App::Lockd::Server::Daemon::Cli;
 use strict;
 use warnings;
 
+use Carp;
+
 # Implements the command line interface
 
-use App::Lockd::Util::HasProperties qw(fh watcher daemon);
+use App::Lockd::Util::HasProperties qw(fh watcher daemon -nonew);
 
-sub run {
-    my $self = shift;
+sub new {
+    my $class = shift;
+    my %params = @_;
 
-    die "No fh" unless $self->fh;
-    die "No daemon" unless $self->daemon;
+    Carp::croak("No fh") unless $params{fh};
+    Carp::croak("No daemon") unless $params{daemon};
+
+    my $self = bless \%params, $class;
 
     my $watcher = AnyEvent::Handle->new(
                         fh          => $self->fh,
@@ -23,6 +28,8 @@ sub run {
 
     $self->announce;
     $self->queue_read;
+
+    return $self;
 }
 
 

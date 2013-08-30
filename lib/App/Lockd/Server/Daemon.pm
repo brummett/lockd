@@ -46,7 +46,6 @@ sub new_cli_connection {
     my $connections = $self->connections;
     my $cli = App::Lockd::Server::Daemon::Cli->new(fh => $sockfh, daemon => $self);
     $connections->{$cli} = $cli;
-    $cli->run();
 }
 
 1;
