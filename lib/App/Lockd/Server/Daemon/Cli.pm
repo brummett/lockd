@@ -18,9 +18,7 @@ sub new {
     Carp::croak("No fh") unless $params{fh};
     Carp::croak("No daemon") unless $params{daemon};
 
-    my $self = bless \%params, $class;
-
-    $self->_create_watcher;
+    my $self = $class->SUPER::new(%params);
 
     $self->announce;
     $self->queue_read;

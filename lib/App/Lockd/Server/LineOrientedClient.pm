@@ -5,6 +5,16 @@ use warnings;
 
 use AnyEvent::Handle;
 
+sub new {
+    my $class = shift;
+    my %params = @_;
+
+    my $self = bless \%params, $class;
+    $self->_create_watcher();
+
+    return $self;
+}
+
 sub _create_watcher {
     my($self, $fh) = @_;
 
