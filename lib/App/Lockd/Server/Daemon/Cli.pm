@@ -3,13 +3,13 @@ package App::Lockd::Server::Daemon::Cli;
 use strict;
 use warnings;
 
-use base 'App::Lockd::Server::LineOrientedClient';
+use base 'App::Lockd::Server::ConnectionBase';
 
 use Carp;
 
 # Implements the command line interface
 
-use App::Lockd::Util::HasProperties qw(fh watcher daemon -nonew);
+use App::Lockd::Util::HasProperties qw(daemon peerhost peerport -nonew);
 
 sub new {
     my $class = shift;
@@ -43,8 +43,9 @@ sub readline {
 sub on_eof {
     my($self, $w) = @_;
 
+print "Client disconnected\n";
     my $fh = $self->fh;
-    my($peer, $port) = map { $fh->$_ } qw(peerhost peerport);
+    my($peer, $port) = map { $self->$_ } qw(peerhost peerport);
     print STDERR "Client $peer:$port closed\n";
     $w->push_write("Goodbye\r\n");
     $fh->close();
@@ -54,7 +55,7 @@ sub on_error {
     my($self, $w, $is_fatal, $message) = @_;
 
     my $fh = $w->fh;
-    my($peer, $port) = map { $fh->$_ } qw(peerhost peerport);
+    my($peer, $port) = map { $self->$_ } qw(peerhost peerport);
     print STDERR "Client $peer:$port had error $message\n";
     $fh->close();
 }
