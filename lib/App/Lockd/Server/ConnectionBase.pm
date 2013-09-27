@@ -12,6 +12,8 @@ sub new {
     my $class = shift;
     my %params = @_;
 
+    Carp::croak("no fh") unless $params{fh};
+
     my $self = bless \%params, $class;
     $self->_create_watcher();
 
