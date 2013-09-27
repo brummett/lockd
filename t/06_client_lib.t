@@ -3,8 +3,10 @@ use warnings;
 
 use Test::More tests => 42;
 
-$SIG{ALRM} = sub { ok(0,' Took too long'); exit(1); };
-alarm(10);
+unless (defined &DB::DB) {
+    $SIG{ALRM} = sub { ok(0,' Took too long'); exit(1); };
+    alarm(10);
+}
 
 use App::Lockd::Client;
 use Sys::Hostname qw();
