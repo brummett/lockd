@@ -91,17 +91,35 @@ sub _basic_msg {
 }
 
 sub lock_shared {
-    my($self, $resource) = @_;
-
+    my($self, $resource, $cb) = @_;
     $resource || Carp::croak("resource is a required parameter to lock_shared");
-    return $self->_lock_('shared', $resource);
+
+    unless ($cb) {
+        # blocking mode
+        my $cv = AnyEvent->condvar;
+        $cb = sub { $cv->send(shift) };
+        $self->_lock_nonblocking('shared', $resource, $cb);
+        return $cv->recv;
+
+    } else {
+        return $self->_lock_nonblocking('shared', $resource, $cb);
+    }
 }
 
 sub lock_exclusive {
-    my($self, $resource) = @_;
-
+    my($self, $resource, $cb) = @_;
     $resource || Carp::croak("resource is a required parameter to lock_exclusive");
-    return $self->_lock_('exclusive', $resource);
+
+    unless ($cb) {
+        # blocking mode
+        my $cv = AnyEvent->condvar;
+        $cb = sub { $cv->send(shift) };
+        $self->_lock_nonblocking('exclusive', $resource, $cb);
+        return $cv->recv;
+
+    } else {
+        return $self->_lock_nonblocking('exclusive', $resource, $cb);
+    }
 }
 
 
@@ -121,8 +139,8 @@ sub _wait_for_response {
     return $cv->recv;
 }
 
-sub _lock_ {
-    my($self, $type, $resource) = @_;
+sub _lock_nonblocking {
+    my($self, $type, $resource, $cb) = @_;
 
     my $msg = {
             $self->_basic_msg,
@@ -141,7 +159,9 @@ sub _lock_ {
 
     my $release = $self->_make_release_closure($msg);
 
-    return App::Lockd::Client::Lock->new($type, $resource, $release);
+    my $lock = App::Lockd::Client::Lock->new($type, $resource, $release);
+    $cb->($lock);
+    1;
 }
 
 sub _make_release_closure {
