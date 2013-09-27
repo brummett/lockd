@@ -50,8 +50,24 @@ sub queue_read {
     $self->watcher->push_read(json => sub { $self->on_read(@_); $self->queue_read(); })
 }
 
+my $null_sub = sub {};
+
 sub on_read {
     my($self, $watcher, $msg) = @_;
+
+    my($on_success, $on_fail);
+    $on_success = sub {
+        ($on_success, $on_fail) = ($null_sub, $null_sub);
+        $msg->{response} = 'OK';
+        $self->watcher->push_write(json => $msg);
+    };
+
+    $on_fail = sub {
+        my $reason = shift;
+        ($on_success, $on_fail) = ($null_sub, $null_sub);
+        $msg->{response} = $reason || $@;
+        $self->watcher->push_write(json => $msg);
+    };
 
     eval {
         my $cmd = $msg->{command};
@@ -59,6 +75,10 @@ sub on_read {
             my($type, $key, $owner) = @$msg{'type','resource','owner'};
             ($type && $key && $owner)
                 or die 'type, resource, and owner are all required properties to create a lock';
+
+            if ($self->claim_for_key($key)) {
+                die "resource $key is already claimed";
+            }
 
             my $resource = App::Lockd::Server::Resource->get($key);
             $resource or die "cannot get resource $key";
@@ -69,7 +89,11 @@ sub on_read {
             my $success = App::Lockd::Server::Command::Lock->execute(
                             resource => $resource,
                             claim    => $claim,
-                            success  => sub { $self->accept_lock($resource, $claim) }
+                            success  => sub {
+                                            $self->accept_lock($resource, $claim)
+                                                ? $on_success->()
+                                                : $on_fail->('cannot accept lock');
+                                        },
                         );
             $success or die "lock unsuccessful";
 
@@ -82,12 +106,15 @@ sub on_read {
             $claim or die "key $key is not locked";
                 
             $self->release($claim)
+                ? $on_success->()
+                : $on_fail->('cannot release lock');
         }
             
     };
 
-    $msg->{response} = $@ || 'OK';
-    $self->watcher->push_write(json => $msg);
+    if ($@) {
+        $on_fail->();
+    }
 }
 
 sub accept_lock {
