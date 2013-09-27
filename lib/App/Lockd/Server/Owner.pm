@@ -136,6 +136,9 @@ sub claim_for_key {
 sub release {
     my($self, $claim) = @_;
 
+    my $locks = $self->locks;
+    my $resource = $claim->resource->key;
+    delete($locks->{$resource});
     App::Lockd::Server::Command::Release->execute(claim => $claim);
 }
 
