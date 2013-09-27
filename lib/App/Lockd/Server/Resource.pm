@@ -24,6 +24,10 @@ sub _new {
         }
         return $resources{$key};
     }
+
+    sub keys {
+        return keys %resources;
+    }
 }
 
 

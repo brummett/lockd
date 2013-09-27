@@ -40,6 +40,8 @@ sub new {
     my $json_codec;
 
     sub additional_watcher_creation_params {
+        my $self = shift;
+
         $json_codec ||= JSON->new;
         return ( json => $json_codec );
     }
@@ -49,6 +51,23 @@ sub queue_read {
     my $self = shift;
     $self->watcher->push_read(json => sub { $self->on_read(@_); $self->queue_read(); })
 }
+
+sub on_eof {
+    my $self = shift;
+
+    $self->daemon->closed_connection($self);
+}
+
+# For now, on_error will get called even in the perfectly normal case where
+# a client with no outstanding locks disconnects
+sub on_error {
+    my($self, $w, $is_fatal, $msg) = @_;
+
+    if ($is_fatal) {
+        $self->daemon->closed_connection($self);
+    }
+}
+
 
 my $null_sub = sub {};
 
@@ -140,6 +159,19 @@ sub release {
     my $resource = $claim->resource->key;
     delete($locks->{$resource});
     App::Lockd::Server::Command::Release->execute(claim => $claim);
+}
+
+sub DESTROY {
+    # In the future when we're properly handling failover, we probably
+    # want to turn this on - we shouldn't "properly" clean up held locks
+    # if we're crashing
+    #return if Devel::GlobalDestruction::in_global_destruction;
+
+    my $self = shift;
+
+    foreach my $claim ( values %{ $self->locks }) {
+        $self->release($_);
+    }
 }
 
 1;
