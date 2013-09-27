@@ -56,6 +56,14 @@ sub _open_socket {
     return $socket;
 }
 
+sub close {
+    my $self = shift;
+    $self->watcher(undef);
+    $self->socket->close;
+    $self->socket(undef);
+    1;
+}
+
 sub on_error {
     my($self, $watcher, $is_fatal, $msg) = @_;
     Carp::croak("Error on lock socket: $msg");

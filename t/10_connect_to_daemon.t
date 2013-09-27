@@ -23,7 +23,7 @@ for( my $i = 1; $i < 4; $i++) {
 }
 
 while(my $client = shift @clients) {
-    ok($client->socket->close(), 'Close a connection');
+    ok($client->close(), 'Close a connection');
     my $cv = AnyEvent->condvar;
     my $w = AnyEvent->idle(cb => $cv);
     $cv->recv;
