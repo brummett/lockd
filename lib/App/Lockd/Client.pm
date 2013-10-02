@@ -104,11 +104,9 @@ sub lock_shared {
 
     unless ($cb) {
         # blocking mode
-        my $cv = AnyEvent->condvar;
-        $cb = sub { $cv->send(shift) };
+        $cb = AnyEvent->condvar;
         $self->_lock_nonblocking('shared', $resource, $cb);
-        return $cv->recv;
-
+        return $cb->recv;
     } else {
         return $self->_lock_nonblocking('shared', $resource, $cb);
     }
@@ -120,10 +118,9 @@ sub lock_exclusive {
 
     unless ($cb) {
         # blocking mode
-        my $cv = AnyEvent->condvar;
-        $cb = sub { $cv->send(shift) };
+        $cb = AnyEvent->condvar;
         $self->_lock_nonblocking('exclusive', $resource, $cb);
-        return $cv->recv;
+        return $cb->recv;
 
     } else {
         return $self->_lock_nonblocking('exclusive', $resource, $cb);
@@ -159,16 +156,24 @@ sub _lock_nonblocking {
 
     $self->_send_request( $msg );
 
-    my $data = $self->_wait_for_response;
+    $self->watcher->push_read(json => sub {
+        my($w, $data) = @_;
 
-    if ($data->{response} ne 'OK') {
-        Carp::croak("Lock $resource failed: ".$data->{response});
-    }
+        if ($data->{response} ne 'OK') {
+            my $msg = "Lock $resource failed: ".$data->{response};
+            if (eval { $cb->can('croak')}) {
+                $cb->croak($msg);
+            } else {
+                $cb->($msg);
+            }
+        } else {
 
-    my $release = $self->_make_release_closure($msg);
+            my $release = $self->_make_release_closure($msg);
 
-    my $lock = App::Lockd::Client::Lock->new($type, $resource, $release);
-    $cb->($lock);
+            my $lock = App::Lockd::Client::Lock->new($type, $resource, $release);
+            $cb->($lock);
+        }
+    });
     1;
 }
 
