@@ -45,9 +45,7 @@ sub _open_socket {
     my $cv = AnyEvent->condvar;
     AnyEvent::Socket::tcp_connect(
         $self->host, $self->port,
-        sub {
-            $cv->send(shift);  # gets the handle as the arg
-        }
+        $cv,
     );
 
     my $socket = $cv->recv;
