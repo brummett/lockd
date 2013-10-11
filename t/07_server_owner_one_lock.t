@@ -82,6 +82,7 @@ sub _create_watcher {
     if ($self->cv) {
         $self->cv->send(['_create_watcher']);
     }
-    return $self->watcher(AnyEventHandleFake->new());
+    my @watcher_args = $self->additional_watcher_creation_params();
+    return $self->watcher(AnyEventHandleFake->new(@watcher_args));
 }
 

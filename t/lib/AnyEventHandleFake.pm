@@ -1,5 +1,8 @@
 package AnyEventHandleFake;
 
+use strict;
+use warnings;
+
 sub new {
     my $class = shift;
     my %params = @_;
@@ -16,15 +19,32 @@ sub push_read {
     $self->_run_queued_reads;
 }
 
+sub unshift_read {
+    my($self, $type, $sub) = @_;
+
+    Carp::croak("push_read called with type $type") unless $type eq 'json';
+
+    unshift @{ $self->{queued_reads} ||= []}, $sub;
+    $self->_run_queued_reads;
+}
+
 sub _run_queued_reads {
     my $self = shift;
     my $input_buffer = $self->{input_buffer} ||= [];
     my $queued_reads = $self->{queued_reads} ||= [];
 
-    while (@$input_buffer and @$queued_reads) {
-        my $msg = shift @$input_buffer;
-        my $cb = shift @$queued_reads;
-        $self->$cb( $msg );
+    while (@$input_buffer) {
+        if (@$queued_reads) {
+            my $msg = shift @$input_buffer;
+            my $cb = shift @$queued_reads;
+            $self->$cb( $msg );
+
+        } elsif ($self->{on_read}) {
+            my $msg = $input_buffer->[0];
+            $self->{on_read}->($self, $msg);
+        } else {
+            last;
+        }
     }
 }
 

@@ -31,8 +31,6 @@ sub new {
 
     $self->locks({});
 
-    $self->queue_read;
-
     return $self;
 }
 
@@ -43,13 +41,13 @@ sub new {
         my $self = shift;
 
         $json_codec ||= JSON->new;
-        return ( json => $json_codec );
+        return (
+            json => $json_codec,
+            on_read => sub {
+                $self->watcher->unshift_read( json => sub { $self->on_read(@_) })
+            },
+        );
     }
-}
-
-sub queue_read {
-    my $self = shift;
-    $self->watcher->push_read(json => sub { $self->on_read(@_); $self->queue_read(); })
 }
 
 sub on_eof {
