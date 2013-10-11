@@ -15,12 +15,13 @@ use AnyEvent;
 use File::Basename;
 use lib File::Basename::dirname(__FILE__).'/lib';
 use AnyEventHandleFake;
+use OwnerFake;
 
 one_lock();
 
 sub one_lock {
     foreach my $lock_type ( qw( shared exclusive ) ) {
-        my $owner = OwnerTest->new( fh => 'fh');
+        my $owner = OwnerFake->new( fh => 'fh');
         isa_ok($owner, 'App::Lockd::Server::Owner');
 
         my $watcher = $owner->watcher;
@@ -61,28 +62,4 @@ sub one_lock {
     }
 }
 
-
-package OwnerTest;
-
-use App::Lockd::Server::Owner;
-BEGIN {
-    our @ISA = qw(App::Lockd::Server::Owner);
-}
-
-sub cv {
-    my $self = shift;
-    if (@_) {
-        $self->{cv} = shift;
-    }
-    return $self->{cv};
-}
-
-sub _create_watcher {
-    my $self = shift;
-    if ($self->cv) {
-        $self->cv->send(['_create_watcher']);
-    }
-    my @watcher_args = $self->additional_watcher_creation_params();
-    return $self->watcher(AnyEventHandleFake->new(@watcher_args));
-}
 

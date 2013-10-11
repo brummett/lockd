@@ -15,6 +15,7 @@ use AnyEvent;
 use File::Basename;
 use lib File::Basename::dirname(__FILE__).'/lib';
 use AnyEventHandleFake;
+use OwnerFake;
 
 multiple_same_resource_same_owner();
 multiple_different_locks();
@@ -29,7 +30,7 @@ sub multiple_same_resource_same_owner {
     foreach my $lock_type ( qw( shared exclusive ) ) {
         note("multiple_same_resource_same_owner: $lock_type");
 
-        my $owner = OwnerTest->new( fh => 'fh');
+        my $owner = OwnerFake->new( fh => 'fh');
         isa_ok($owner, 'App::Lockd::Server::Owner');
 
         lock_get_response($owner, 'shared', 'foo');
@@ -47,8 +48,8 @@ sub multiple_different_locks {
     # Should work the same whether there's one owner or two,
     # whether they're shared or exclusive locks
     foreach my $lock_type ( qw( shared exclusive ) ) {
-        foreach my $owner ( [ OwnerTest->new( fh => 'fh') ],
-                            [ OwnerTest->new( fh => 'fh'), OwnerTest->new( fh => 'fh') ],
+        foreach my $owner ( [ OwnerFake->new( fh => 'fh') ],
+                            [ OwnerFake->new( fh => 'fh'), OwnerFake->new( fh => 'fh') ],
         ) {
             note("multiple_different_locks: $lock_type ".scalar(@$owner)." different owners");
 
@@ -71,7 +72,7 @@ sub multiple_different_locks {
 }
 
 sub multiple_same_shared {
-    my @owners = map { OwnerTest->new( fh => 'fh') } ( 1,2,3 );
+    my @owners = map { OwnerFake->new( fh => 'fh') } ( 1,2,3 );
 
     foreach my $owner (@owners) {
         lock_get_response($owner, 'shared', 'foo');
@@ -84,7 +85,7 @@ sub multiple_same_shared {
 
 
 sub multiple_same_exclusive {
-    my($first, $second) = map { OwnerTest->new( fh => 'fh') } ( 1,2 );
+    my($first, $second) = map { OwnerFake->new( fh => 'fh') } ( 1,2 );
 
     lock_get_response($first, 'exclusive', 'foo');
 
@@ -101,8 +102,8 @@ sub shared_exclusive_shared {
     note('shared_exclusive_shared');
 
     my $result;
-    my @shared = map { OwnerTest->new( fh => 'fh') } ( 1,2 );
-    my $excl   = OwnerTest->new( fh => 'fh');
+    my @shared = map { OwnerFake->new( fh => 'fh') } ( 1,2 );
+    my $excl   = OwnerFake->new( fh => 'fh');
 
     lock_get_response($shared[0], 'shared', 'foo');
 
@@ -135,8 +136,8 @@ sub shared_exclusive_shared {
 
 sub exclusive_shared_shared {
     note('exclusive_shared_shared');
-    my @shared = map { OwnerTest->new( fh => 'fh') } ( 1,2 );
-    my $excl   = OwnerTest->new( fh => 'fh');
+    my @shared = map { OwnerFake->new( fh => 'fh') } ( 1,2 );
+    my $excl   = OwnerFake->new( fh => 'fh');
 
     lock_get_response($excl, 'exclusive', 'foo');
 
@@ -228,30 +229,5 @@ sub make_release_message {
         command => 'release',
         resource => $resource,
     };
-}
-
-
-package OwnerTest;
-
-use App::Lockd::Server::Owner;
-BEGIN {
-    our @ISA = qw(App::Lockd::Server::Owner);
-}
-
-sub cv {
-    my $self = shift;
-    if (@_) {
-        $self->{cv} = shift;
-    }
-    return $self->{cv};
-}
-
-sub _create_watcher {
-    my $self = shift;
-    if ($self->cv) {
-        $self->cv->send(['_create_watcher']);
-    }
-    my @watcher_args = $self->additional_watcher_creation_params();
-    return $self->watcher(AnyEventHandleFake->new(@watcher_args));
 }
 
