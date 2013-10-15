@@ -53,9 +53,7 @@ sub new {
 sub on_eof {
     my $self = shift;
 
-    $self->fh(undef);
-    $self->watcher(undef);
-    $self->daemon->closed_connection($self);
+    $self->_clean_up_for_close();
 }
 
 # For now, on_error will get called even in the perfectly normal case where
@@ -64,10 +62,17 @@ sub on_error {
     my($self, $w, $is_fatal, $msg) = @_;
 
     if ($is_fatal) {
-        $self->fh(undef);
-        $self->watcher(undef);
-        $self->daemon->closed_connection($self);
+        $self->_clean_up_for_close();
     }
+}
+
+
+sub _clean_up_for_close {
+    my $self = shift;
+
+    $self->fh(undef);
+    $self->watcher(undef);  # garbage collect everything the watcher is holding onto
+    $self->daemon->closed_connection($self);
 }
 
 
