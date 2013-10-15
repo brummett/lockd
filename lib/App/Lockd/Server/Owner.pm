@@ -53,6 +53,8 @@ sub new {
 sub on_eof {
     my $self = shift;
 
+    $self->fh(undef);
+    $self->watcher(undef);
     $self->daemon->closed_connection($self);
 }
 
@@ -62,6 +64,8 @@ sub on_error {
     my($self, $w, $is_fatal, $msg) = @_;
 
     if ($is_fatal) {
+        $self->fh(undef);
+        $self->watcher(undef);
         $self->daemon->closed_connection($self);
     }
 }
@@ -168,7 +172,7 @@ sub DESTROY {
     my $self = shift;
 
     foreach my $claim ( values %{ $self->locks }) {
-        $self->release($_);
+        $self->release($claim);
     }
 }
 
