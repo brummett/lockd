@@ -21,6 +21,13 @@ foreach my $required_method (qw( is_compatible_with upgraded_type downgraded_typ
     *$name = $sub;
 }
 
+sub label {
+    my $class = shift;
+    $class = ref($class) || $class;
+    my($label) = $class =~ m/::(\w+)$/;
+    return lc $label;
+}
+
 1;
 
 package App::Lockd::LockType::Unlocked;

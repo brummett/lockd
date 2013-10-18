@@ -109,5 +109,22 @@ sub _remove_from_list {
     return $idx == -1 ? () : splice(@$list, $idx, 1);
 }
 
-        
+
+sub __dump_state {
+    my $class = shift;
+
+    my @resources = map { $class->get($_) } sort $class->keys;
+
+    my $string = '';
+    foreach my $resource ( @resources ) {
+        next unless $resource->is_locked;
+        $string .= sprintf("Resource %s %s: %d holders, %d waiters\n",
+                            $resource->key,
+                            $resource->state->label,
+                            $resource->is_locked,
+                            $resource->waiting_length);
+    }
+    return $string;
+}
+
 1;
