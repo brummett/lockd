@@ -14,7 +14,14 @@ sub execute {
     my $resource = $claim->resource;
     return unless $resource;
 
-    return unless $resource->remove_from_holders($claim);
+    # Search the is-holding list, since it's likely to be shorter
+    # than is-waiting
+    if ($resource->is_holding($claim)) {
+        return unless $resource->remove_from_holders($claim);
+    } else {
+        return $resource->remove_from_waiters($claim);
+    }
+    $claim->resource(undef);
 
     unless ($resource->is_locked) {
         $resource->state(UNLOCKED);
