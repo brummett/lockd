@@ -9,7 +9,7 @@ use warnings;
 
 use base 'App::Lockd::Server::ConnectionBase';
 
-use App::Lockd::Util::HasProperties qw(locks daemon watcher peerhost peerport -nonew);
+use App::Lockd::Util::HasProperties qw(claims daemon watcher peerhost peerport -nonew);
 
 use App::Lockd::Server::Resource;
 use App::Lockd::Server::Claim;
@@ -29,7 +29,7 @@ sub new {
 
     my $self = $class->SUPER::new(%params);
 
-    $self->locks({});
+    $self->claims({});
 
     return $self;
 }
@@ -145,8 +145,8 @@ sub on_read {
 sub accept_lock {
     my($self, $resource, $claim) = @_;
 
-    my $locks = $self->locks;
-    $locks->{ $resource->key } = $claim;
+    my $claims = $self->claims;
+    $claims->{ $resource->key } = $claim;
 }
 
 
@@ -154,16 +154,16 @@ sub claim_for_key {
     my $self = shift;
     my $key = shift;
 
-    my $locks = $self->locks;
-    return $locks->{$key};
+    my $claims = $self->claims;
+    return $claims->{$key};
 }
 
 sub release {
     my($self, $claim) = @_;
 
-    my $locks = $self->locks;
+    my $claims = $self->claims;
     my $resource = $claim->resource->key;
-    delete($locks->{$resource});
+    delete($claims->{$resource});
     App::Lockd::Server::Command::Release->execute(claim => $claim);
 }
 
@@ -175,7 +175,7 @@ sub DESTROY {
 
     my $self = shift;
 
-    foreach my $claim ( values %{ $self->locks }) {
+    foreach my $claim ( values %{ $self->claims }) {
         $self->release($claim);
     }
 }
