@@ -17,7 +17,7 @@ sub shared_then_exclusive {
 
     my $r = App::Lockd::Server::Resource->get(__LINE__);
 
-    my $shared_lock1 = App::Lockd::Server::Claim->shared;
+    my $shared_lock1 = App::Lockd::Server::Claim->shared(resource => $r);
 
     # one shared lock
     my $first = 0;
@@ -33,7 +33,7 @@ sub shared_then_exclusive {
 
     # Try getting excl lock - will be queued
     my $second = 0;
-    my $excl_lock = App::Lockd::Server::Claim->exclusive;
+    my $excl_lock = App::Lockd::Server::Claim->exclusive(resource => $r);
     $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,
                     claim => $excl_lock,
@@ -45,7 +45,7 @@ sub shared_then_exclusive {
 
 
     # attach another shared lock
-    my $shared_lock2 = App::Lockd::Server::Claim->shared;
+    my $shared_lock2 = App::Lockd::Server::Claim->shared(resource => $r);
     my $third = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,
@@ -73,7 +73,7 @@ sub exclusive_then_shared {
 
     my $r = App::Lockd::Server::Resource->get(__LINE__);
 
-    my $excl_lock1 = App::Lockd::Server::Claim->exclusive;
+    my $excl_lock1 = App::Lockd::Server::Claim->exclusive(resource => $r);
     my $first = 0;
     my $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,
@@ -84,9 +84,9 @@ sub exclusive_then_shared {
     is($r->state, LOCK_EXCLUSIVE, 'Resource is exclusive locked');
     
 
-    my $shared_lock1 = App::Lockd::Server::Claim->shared;
-    my $shared_lock2 = App::Lockd::Server::Claim->shared;
-    my $excl_lock2 = App::Lockd::Server::Claim->exclusive;
+    my $shared_lock1 = App::Lockd::Server::Claim->shared(resource => $r);
+    my $shared_lock2 = App::Lockd::Server::Claim->shared(resource => $r);
+    my $excl_lock2 = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $shared_1 = 0;
     $success = App::Lockd::Server::Command::Lock->execute(

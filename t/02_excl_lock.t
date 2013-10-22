@@ -18,7 +18,7 @@ sub one_lock {
     ok($r, 'get resource');
     is($r->state, UNLOCKED, 'New resource is unlocked');
 
-    my $c = App::Lockd::Server::Claim->exclusive;
+    my $c = App::Lockd::Server::Claim->exclusive(resource => $r);
     ok($c, 'Create exclusive claim');
 
     my $first_lock_activated = 0;
@@ -40,10 +40,10 @@ sub two_locks {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
     ok($r, 'Get resource');
 
-    my $c1 = App::Lockd::Server::Claim->exclusive;
+    my $c1 = App::Lockd::Server::Claim->exclusive(resource => $r);
     ok($c1, 'Create exclusive claim');
     
-    my $c2 = App::Lockd::Server::Claim->exclusive;
+    my $c2 = App::Lockd::Server::Claim->exclusive(resource => $r);
     ok($c2, 'Create second exclusive claim');
 
     my $first_lock_activated = 0;

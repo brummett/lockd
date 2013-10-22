@@ -20,7 +20,7 @@ downgrade_incompatible_waiting_claim();
 
 sub failed_downgrade {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $c = App::Lockd::Server::Claim->shared;
+    my $c = App::Lockd::Server::Claim->shared(resource => $r);
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
             claim => $c,
@@ -40,7 +40,7 @@ sub failed_downgrade {
 
 sub immediate_downgrade_no_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $c = App::Lockd::Server::Claim->exclusive;
+    my $c = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -62,9 +62,9 @@ sub immediate_downgrade_no_waiters {
 
 sub immediate_downgrade_with_compatible_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $excl = App::Lockd::Server::Claim->exclusive;
-    my $shared1 = App::Lockd::Server::Claim->shared;
-    my $shared2 = App::Lockd::Server::Claim->shared;
+    my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $shared1 = App::Lockd::Server::Claim->shared(resource => $r);
+    my $shared2 = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -105,9 +105,9 @@ sub immediate_downgrade_with_compatible_waiters {
 
 sub immediate_downgrade_with_incompatible_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $tested = App::Lockd::Server::Claim->exclusive;
-    my $excl1 = App::Lockd::Server::Claim->exclusive;
-    my $excl2 = App::Lockd::Server::Claim->exclusive;
+    my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $excl1 = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $excl2 = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -149,10 +149,10 @@ sub immediate_downgrade_with_incompatible_waiters {
 
 sub immediate_downgrade_with_mixed_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $tested = App::Lockd::Server::Claim->exclusive;
-    my $excl = App::Lockd::Server::Claim->exclusive;
-    my $shared1 = App::Lockd::Server::Claim->shared;
-    my $shared2 = App::Lockd::Server::Claim->shared;
+    my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $shared1 = App::Lockd::Server::Claim->shared(resource => $r);
+    my $shared2 = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -205,8 +205,8 @@ sub immediate_downgrade_with_mixed_waiters {
 
 sub downgrade_compatible_waiting_claim {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $shared = App::Lockd::Server::Claim->shared;
-    my $tested = App::Lockd::Server::Claim->exclusive;
+    my $shared = App::Lockd::Server::Claim->shared(resource => $r);
+    my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,
@@ -236,8 +236,8 @@ sub downgrade_compatible_waiting_claim {
 
 sub downgrade_incompatible_waiting_claim {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $excl = App::Lockd::Server::Claim->exclusive;
-    my $tested = App::Lockd::Server::Claim->exclusive;
+    my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
+    my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,

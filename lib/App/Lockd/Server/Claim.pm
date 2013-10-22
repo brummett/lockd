@@ -9,19 +9,23 @@ use App::Lockd::LockType qw(LOCK_SHARED LOCK_EXCLUSIVE);
 use Carp;
 
 sub _new {
-    my($class, $type) = @_;
-    return bless { type => $type }, $class;
+    my($class, $type, %params) = @_;
+
+    Carp::croak('resource is a required parameter to create a Claim')
+        unless (exists $params{resource});
+
+    return bless { %params, type => $type }, $class;
 }
 
 
 sub shared {
-    my($class) = @_;
-    return $class->_new(LOCK_SHARED);
+    my $class = shift;
+    return $class->_new(LOCK_SHARED, @_);
 }
 
 sub exclusive {
-    my($class) = @_;
-    return $class->_new(LOCK_EXCLUSIVE);
+    my $class = shift;
+    return $class->_new(LOCK_EXCLUSIVE, @_);
 }
 
 

@@ -109,7 +109,7 @@ sub on_read {
             my $resource = App::Lockd::Server::Resource->get($key);
             $resource or die "cannot get resource $key";
 
-            my $claim = App::Lockd::Server::Claim->$type;
+            my $claim = App::Lockd::Server::Claim->$type(resource => $resource);
             $claim or die "cannot create $type claim";
 
             my $success = App::Lockd::Server::Command::Lock->execute(

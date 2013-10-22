@@ -30,7 +30,7 @@ sub one_claim_in_lists {
 
     my $r1 = App::Lockd::Server::Resource->get(__LINE__);
 
-    my $shared_lock1 = App::Lockd::Server::Claim->shared;
+    my $shared_lock1 = App::Lockd::Server::Claim->shared(resource => $r1);
     ok(! $r1->is_claim_attached($shared_lock1), 'is_claim_attached with new resource');
 
     ok($r1->add_to_holders($shared_lock1), 'Add shared lock to the holders list');
@@ -54,8 +54,8 @@ sub one_claim_in_lists {
 
 sub two_claims_in_lists {
     my $r1 = App::Lockd::Server::Resource->get(__LINE__);
-    my $shared_lock1 = App::Lockd::Server::Claim->shared;
-    my $excl_lock = App::Lockd::Server::Claim->exclusive;
+    my $shared_lock1 = App::Lockd::Server::Claim->shared(resource => $r1);
+    my $excl_lock = App::Lockd::Server::Claim->exclusive(resource => $r1);
 
     ok($r1->add_to_holders($shared_lock1), 'Add shared claim to holders list');
     ok(! $r1->is_claim_attached($excl_lock), 'is_lock_attached for other excl lock');
@@ -70,7 +70,7 @@ sub two_claims_in_lists {
 
 
     # Add another shared lock
-    my $shared_lock2 = App::Lockd::Server::Claim->shared;
+    my $shared_lock2 = App::Lockd::Server::Claim->shared(resource => $r1);
     ok(! $r1->is_claim_attached($shared_lock2), 'is_lock_attached for other shared lock');
     ok($r1->add_to_holders($shared_lock2), 'Add another shared lock to the holders list');
 
@@ -108,9 +108,9 @@ sub two_claims_in_lists {
 
 sub add_multiple_claims_to_list {
     my $r1 = App::Lockd::Server::Resource->get(__LINE__);
-    my $c1 = App::Lockd::Server::Claim->shared;
-    my $c2 = App::Lockd::Server::Claim->shared;
-    my $c3 = App::Lockd::Server::Claim->shared;
+    my $c1 = App::Lockd::Server::Claim->shared(resource => $r1);
+    my $c2 = App::Lockd::Server::Claim->shared(resource => $r1);
+    my $c3 = App::Lockd::Server::Claim->shared(resource => $r1);
 
     ok($r1->add_to_holders($c1), 'Add one item to the holders list');
 

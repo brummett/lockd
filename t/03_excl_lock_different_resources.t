@@ -16,7 +16,7 @@ ok($r2, 'get second resource');
 
 
 my $first_lock_activated = 0;
-my $excl = App::Lockd::Server::Claim->exclusive;
+my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
 my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
             claim => $excl,
@@ -30,7 +30,7 @@ ok(! $r->is_waiting($excl), 'Lock is not waiting on resource');
 
 
 my $second_lock_activated = 0;
-my $excl_2 = App::Lockd::Server::Claim->exclusive;
+my $excl_2 = App::Lockd::Server::Claim->exclusive(resource => $r2);
 $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r2,
             claim => $excl_2,

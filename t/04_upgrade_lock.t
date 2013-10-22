@@ -18,7 +18,7 @@ upgrade_waiting_claim();
 
 sub failed_upgrade {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $c = App::Lockd::Server::Claim->exclusive;
+    my $c = App::Lockd::Server::Claim->exclusive(resource => $r);
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
             claim => $c,
@@ -38,7 +38,7 @@ sub failed_upgrade {
 
 sub immediate_upgrade_no_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $c = App::Lockd::Server::Claim->shared;
+    my $c = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -60,8 +60,8 @@ sub immediate_upgrade_no_waiters {
 
 sub immediate_upgrade_with_waiters {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $shared = App::Lockd::Server::Claim->shared;
-    my $excl = App::Lockd::Server::Claim->exclusive;
+    my $shared = App::Lockd::Server::Claim->shared(resource => $r);
+    my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
             resource => $r,
@@ -92,8 +92,8 @@ sub immediate_upgrade_with_waiters {
 
 sub delayed_upgrade {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $shared_1 = App::Lockd::Server::Claim->shared;
-    my $shared_2 = App::Lockd::Server::Claim->shared;
+    my $shared_1 = App::Lockd::Server::Claim->shared(resource => $r);
+    my $shared_2 = App::Lockd::Server::Claim->shared(resource => $r);
 
     foreach my $c ( $shared_1, $shared_2 ) {
         App::Lockd::Server::Command::Lock->execute(
@@ -126,8 +126,8 @@ sub delayed_upgrade {
 
 sub upgrade_waiting_claim {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
-    my $shared = App::Lockd::Server::Claim->shared;
-    my $excl = App::Lockd::Server::Claim->exclusive;
+    my $shared = App::Lockd::Server::Claim->shared(resource => $r);
+    my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
                     resource => $r,
