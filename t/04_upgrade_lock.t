@@ -20,7 +20,6 @@ sub failed_upgrade {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
     my $c = App::Lockd::Server::Claim->exclusive(resource => $r);
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $c,
             success => sub { } );
     ok($success, 'exclusive lock');
@@ -41,7 +40,6 @@ sub immediate_upgrade_no_waiters {
     my $c = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $c,
             success => sub { } );
     ok($success, 'shared lock');
@@ -64,13 +62,11 @@ sub immediate_upgrade_with_waiters {
     my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $shared,
             success => sub { } );
     ok($success, 'shared lock');
 
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $excl,
             success => sub { } );
     ok($success, 'add waiting exclusive lock');
@@ -97,7 +93,6 @@ sub delayed_upgrade {
 
     foreach my $c ( $shared_1, $shared_2 ) {
         App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $c,
             success => sub {} );
     }
@@ -130,13 +125,11 @@ sub upgrade_waiting_claim {
     my $excl = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $excl,
                     success => sub {} );
     ok($success, 'exclusive lock');
 
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared,
                     success => sub {} );
     ok($success, 'queue up shared lock');

@@ -22,7 +22,6 @@ sub shared_then_exclusive {
     # one shared lock
     my $first = 0;
     my $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared_lock1,
                     success => sub { $first++} );
     ok($success, 'lock shared');
@@ -35,7 +34,6 @@ sub shared_then_exclusive {
     my $second = 0;
     my $excl_lock = App::Lockd::Server::Claim->exclusive(resource => $r);
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $excl_lock,
                     success => sub { $second++ } );
     ok($success, 'add exclusive lock');
@@ -48,7 +46,6 @@ sub shared_then_exclusive {
     my $shared_lock2 = App::Lockd::Server::Claim->shared(resource => $r);
     my $third = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared_lock2,
                     success => sub { $third++ } );
     ok($success, 'lock shared again');
@@ -76,7 +73,6 @@ sub exclusive_then_shared {
     my $excl_lock1 = App::Lockd::Server::Claim->exclusive(resource => $r);
     my $first = 0;
     my $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $excl_lock1,
                     success => sub { $first++ } );
     ok($success, 'exclusive lock');
@@ -90,7 +86,6 @@ sub exclusive_then_shared {
 
     my $shared_1 = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared_lock1,
                     success => sub { $shared_1++ } );
     ok($success, 'add shared lock');
@@ -98,7 +93,6 @@ sub exclusive_then_shared {
 
     my $excl_2 = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $excl_lock2,
                     success => sub { $excl_2++ } );
     ok($success, 'add another exclusive lock');
@@ -106,7 +100,6 @@ sub exclusive_then_shared {
 
     my $shared_2 = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared_lock2,
                     success => sub { $shared_2++ } );
     ok($success, 'add another shared lock');

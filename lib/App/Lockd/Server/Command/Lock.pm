@@ -8,7 +8,8 @@ use App::Lockd::Util qw(required_params);
 sub execute {
     my $class = shift;
 
-    my($resource, $claim, $success) = required_params([qw(resource claim success)], @_);
+    my($claim, $success) = required_params([qw(claim success)], @_);
+    my $resource = $claim->resource;
 
     # Don't double-lock the same lock
     return if $resource->is_claim_attached($claim);

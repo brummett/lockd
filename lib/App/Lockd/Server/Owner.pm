@@ -113,7 +113,6 @@ sub on_read {
             $claim or die "cannot create $type claim";
 
             my $success = App::Lockd::Server::Command::Lock->execute(
-                            resource => $resource,
                             claim    => $claim,
                             success  => sub {
                                             $self->accept_lock($resource, $claim)

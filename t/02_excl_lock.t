@@ -23,7 +23,6 @@ sub one_lock {
 
     my $first_lock_activated = 0;
     my $success = App::Lockd::Server::Command::Lock->execute(
-                resource => $r,
                 claim => $c,
                 success => sub { $first_lock_activated++ }
             );
@@ -48,7 +47,6 @@ sub two_locks {
 
     my $first_lock_activated = 0;
     my $success = App::Lockd::Server::Command::Lock->execute(
-                resource => $r,
                 claim => $c1,
                 success => sub { $first_lock_activated++ }
             );
@@ -58,7 +56,6 @@ sub two_locks {
 
     my $second_lock_activated = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-                resource => $r,
                 claim => $c2,
                 success => sub { $second_lock_activated++ }
             );

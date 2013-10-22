@@ -45,9 +45,11 @@ sub execute {
     # queue it up
     App::Lockd::Server::Command::Release->execute( claim => $claim)
         or Carp::croak('Could not release claim on resource');
+
+    # The Release command sets the claim's resource to undef
+    $claim->resource($resource);
     $claim->type( $upgraded_type );
     App::Lockd::Server::Command::Lock->execute(
-        resource => $resource,
         claim => $claim,
         success => $success
     ) or Carp::croak('Could not re-add claim to resource after releasing it');

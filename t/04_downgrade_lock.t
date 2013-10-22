@@ -22,7 +22,6 @@ sub failed_downgrade {
     my $r = App::Lockd::Server::Resource->get(__LINE__);
     my $c = App::Lockd::Server::Claim->shared(resource => $r);
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $c,
             success => sub { } );
     ok($success, 'shared lock');
@@ -43,7 +42,6 @@ sub immediate_downgrade_no_waiters {
     my $c = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $c,
             success => sub { } );
     ok($success, 'excl lock');
@@ -67,20 +65,17 @@ sub immediate_downgrade_with_compatible_waiters {
     my $shared2 = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $excl,
             success => sub { } );
     ok($success, 'excl lock');
 
     my $shared1_signalled = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $shared1,
             success => sub { $shared1_signalled++ } );
     ok($success, 'add waiting shared lock');
     my $shared2_signalled = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $shared2,
             success => sub { $shared2_signalled++ } );
     ok($success, 'add second waiting shared lock');
@@ -110,20 +105,17 @@ sub immediate_downgrade_with_incompatible_waiters {
     my $excl2 = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $tested,
             success => sub { } );
     ok($success, 'excl lock');
 
     my $waiter_triggered = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $excl1,
             success => sub { $waiter_triggered++ } );
     ok($success, 'add waiting excl lock');
     my $excl2_triggered = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $excl2,
             success => sub { $waiter_triggered++ } );
     ok($success, 'add second waiting excl lock');
@@ -155,26 +147,22 @@ sub immediate_downgrade_with_mixed_waiters {
     my $shared2 = App::Lockd::Server::Claim->shared(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $tested,
             success => sub { } );
     ok($success, 'excl lock');
 
     my $shared1_signalled = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $shared1,
             success => sub { $shared1_signalled++ } );
     ok($success, 'add waiting shared lock');
     my $excl_signalled = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $excl,
             success => sub { $excl_signalled++ } );
     ok($success, 'add waiting excl lock');
     my $shared2_signalled = 0;
     $success = App::Lockd::Server::Command::Lock->execute(
-            resource => $r,
             claim => $shared2,
             success => sub { $shared2_signalled++ } );
     ok($success, 'add another waiting shared lock');
@@ -209,13 +197,11 @@ sub downgrade_compatible_waiting_claim {
     my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $shared,
                     success => sub {} );
     ok($success, 'shared lock');
 
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $tested,
                     success => sub {} );
     ok($success, 'queue up exclusive lock');
@@ -240,13 +226,11 @@ sub downgrade_incompatible_waiting_claim {
     my $tested = App::Lockd::Server::Claim->exclusive(resource => $r);
 
     my $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $excl,
                     success => sub {} );
     ok($success, 'excl lock');
 
     $success = App::Lockd::Server::Command::Lock->execute(
-                    resource => $r,
                     claim => $tested,
                     success => sub {} );
     ok($success, 'queue up exclusive lock');
