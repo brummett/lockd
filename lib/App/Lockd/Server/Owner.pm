@@ -70,8 +70,7 @@ sub on_error {
 sub _clean_up_for_close {
     my $self = shift;
 
-    $self->fh(undef);
-    $self->watcher(undef);  # garbage collect everything the watcher is holding onto
+    $self->_release_all_claims();
     $self->daemon->closed_connection($self);
 }
 
