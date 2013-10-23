@@ -112,11 +112,7 @@ sub on_read {
 
             my $success = App::Lockd::Server::Command::Lock->execute(
                             claim    => $claim,
-                            success  => sub {
-                                            $self->accept_lock($resource, $claim)
-                                                ? $on_success->()
-                                                : $on_fail->('cannot accept lock');
-                                        },
+                            success  => sub { $on_success->() },
                         );
             $success or die "lock unsuccessful";
 
@@ -149,12 +145,6 @@ sub create_claim {
     my $claims = $self->claims;
     $claims->{ $resource->key } = $claim;
     return $claim;
-}
-
-sub accept_lock {
-    my($self, $resource, $claim) = @_;
-
-    1;
 }
 
 
