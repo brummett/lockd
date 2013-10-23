@@ -167,6 +167,14 @@ sub release {
     App::Lockd::Server::Command::Release->execute(claim => $claim);
 }
 
+sub _release_all_claims {
+    my $self = shift;
+
+    foreach my $claim ( values %{ $self->claims }) {
+        $self->release($claim);
+    }
+}
+
 sub DESTROY {
     # In the future when we're properly handling failover, we probably
     # want to turn this on - we shouldn't "properly" clean up held locks
@@ -174,10 +182,8 @@ sub DESTROY {
     #return if Devel::GlobalDestruction::in_global_destruction;
 
     my $self = shift;
+    $self->_release_all_claims;
 
-    foreach my $claim ( values %{ $self->claims }) {
-        $self->release($claim);
-    }
 }
 
 1;
