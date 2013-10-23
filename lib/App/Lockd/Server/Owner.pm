@@ -109,8 +109,7 @@ sub on_read {
             my $resource = App::Lockd::Server::Resource->get($key);
             $resource or die "cannot get resource $key";
 
-            my $claim = App::Lockd::Server::Claim->$type(resource => $resource);
-            $claim or die "cannot create $type claim";
+            my $claim = $self->create_claim($type, $resource);
 
             my $success = App::Lockd::Server::Command::Lock->execute(
                             claim    => $claim,
@@ -142,11 +141,21 @@ sub on_read {
     }
 }
 
-sub accept_lock {
-    my($self, $resource, $claim) = @_;
+sub create_claim {
+    my($self, $type, $resource) = @_;
+
+    my $claim = App::Lockd::Server::Claim->$type(resource => $resource);
+    $claim or Carp::croak("cannot create $type claim");
 
     my $claims = $self->claims;
     $claims->{ $resource->key } = $claim;
+    return $claim;
+}
+
+sub accept_lock {
+    my($self, $resource, $claim) = @_;
+
+    1;
 }
 
 
